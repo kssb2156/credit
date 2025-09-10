@@ -126,8 +126,6 @@ header {
     display: block;
 }
 
-/* Add these styles to your existing style.css file */
-
 .year-header {
     background-color: #e9ecef;
     cursor: pointer;
@@ -145,4 +143,8 @@ header {
 
 .year-list.d-none {
     display: none;
+}
+
+.loan-item .text-danger {
+    color: #dc3545;
 }
