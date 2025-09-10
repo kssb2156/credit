@@ -29,7 +29,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // ข้อมูลรายการเงินยืมทั้งหมด
     const allLoans = [
-        { date: '07/08/24', amount: 10000, description: 'ยืมผ่อนรถ', slip: 'https://s.imgz.io/2025/09/10/7Aug675519fdb469a43848.jpg' },
         { date: '01/08/24', amount: 9000, description: 'ยืมผ่อนรถ', slip: 'https://s.imgz.io/2025/09/10/1Aug67e2abb23107bc6f1b.jpg' },
          { date: '25/07/24', amount: 9000, description: 'ยืมผ่อนรถ', slip: 'https://s.imgz.io/2025/09/10/25Jul67328173daebdd0db2.jpg' },
         { date: '21/07/24', amount: 500, description: 'ยืมเงิน', slip: 'https://s.imgz.io/2025/09/10/21Jul6786f410945249b9e1.jpg' },
