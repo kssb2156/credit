@@ -17,7 +17,6 @@
         </header>
 
         <div class="tab-content">
-
             <div id="summary-tab" class="tab-pane active">
                 <div class="container p-3">
                     <div class="row g-3 mb-4">
@@ -26,7 +25,7 @@
                                 <i class="fas fa-coins summary-icon"></i>
                                 <div>
                                     <small class="summary-label">ยอดเงินยืมทั้งหมด</small>
-                                    <h5 class="summary-value">75,400 บาท</h5>
+                                    <h5 class="summary-value" id="total-loan"></h5>
                                 </div>
                             </div>
                         </div>
@@ -34,9 +33,9 @@
                             <div class="summary-card total-paid-card">
                                 <i class="fas fa-check-circle summary-icon"></i>
                                 <div>
+                                     <!-- UpAuto -->
                                     <small class="summary-label">ยอดชำระแล้ว</small>
-                                     <!-- แก้ไขยอดเงินชำระแล้ว -->
-                                    <h5 class="summary-value">36,000 บาท</h5>
+                                    <h5 class="summary-value" id="total-paid"></h5>
                                 </div>
                             </div>
                         </div>
@@ -44,32 +43,41 @@
                             <div class="summary-card total-outstanding-card">
                                 <i class="fas fa-exclamation-circle summary-icon"></i>
                                 <div>
-                                    <!-- แก้ไขยอดเงินค้างชำระ -->
+                                     <!-- UpAuto -->
                                     <small class="summary-label">ยอดค้างชำระ</small>
-                                    <h5 class="summary-value">39,400 บาท</h5>
+                                    <h5 class="summary-value" id="total-outstanding"></h5>
                                 </div>
                             </div>
                         </div>
                     </div>
-                    <!-- แสดงรายการล่าสุด อัพ Auto -->
+                    
                     <h5 class="fw-bold mb-3">รายการชำระล่าสุด</h5>
                     <div class="card p-3 shadow-sm">
                         <ul class="list-group list-group-flush" id="latest-payment-list">
-                            </ul>
+                        </ul>
                     </div>
                 </div>
             </div>
-            <!-- Tap หน้า 2 (ประวัติ) -->
+
             <div id="history-tab" class="tab-pane">
                 <div class="container p-3">
                     <h5 class="fw-bold mb-3">ประวัติการชำระเงินทั้งหมด</h5>
                     <div class="card p-3 shadow-sm">
                         <div id="payment-history-list">
-                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
 
+            <div id="loan-tab" class="tab-pane">
+                <div class="container p-3">
+                    <h5 class="fw-bold mb-3">รายการเงินยืมทั้งหมด</h5>
+                    <div class="card p-3 shadow-sm">
+                        <ul class="list-group list-group-flush" id="loan-list">
+                            </ul>
+                    </div>
+                </div>
+            </div>
         </div>
 
         <nav class="tab-bar">
@@ -80,6 +88,10 @@
             <a href="#" class="tab-item" data-tab="history-tab">
                 <i class="fas fa-history tab-icon"></i>
                 <span class="tab-label">ประวัติ</span>
+            </a>
+            <a href="#" class="tab-item" data-tab="loan-tab">
+                <i class="fas fa-file-invoice-dollar tab-icon"></i>
+                <span class="tab-label">เงินยืม</span>
             </a>
         </nav>
     </div>
