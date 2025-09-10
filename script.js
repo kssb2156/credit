@@ -84,7 +84,8 @@ document.addEventListener('DOMContentLoaded', () => {
             yearGroup.appendChild(yearHeader);
 
             const yearList = document.createElement('ul');
-            yearList.className = 'list-group list-group-flush year-list';
+            // This is the line to fix the issue. We add 'd-none' to collapse the list by default.
+            yearList.className = 'list-group list-group-flush year-list d-none';
 
             paymentsByYear[year].forEach(payment => {
                 const isPayment = payment.amount > 0;
@@ -144,5 +145,5 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Initial render
     renderPaymentHistory();
-    renderLatestPayment(); // เรียกใช้ฟังก์ชันนี้เพื่อแสดงรายการล่าสุดในหน้าสรุป
+    renderLatestPayment(); // Call this function to display the latest items on the summary page.
 });
