@@ -6,6 +6,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const latestPaymentList = document.getElementById('latest-payment-list');
     const paymentHistoryList = document.getElementById('payment-history-list');
     const loanListElement = document.getElementById('loan-list');
+    const historyTotalPaidElement = document.getElementById('history-total-paid'); // New element
+    const loanTotalAmountElement = document.getElementById('loan-total-amount'); // New element
 
     // ข้อมูลรายการชำระเงินทั้งหมด
     const allPayments = [
@@ -53,7 +55,6 @@ document.addEventListener('DOMContentLoaded', () => {
         totalPaidElement.textContent = `${totalPaidAmount.toLocaleString()} บาท`;
         totalOutstandingElement.textContent = `${totalOutstandingAmount.toLocaleString()} บาท`;
         
-        // Render latest payments
         renderLatestPayments();
     };
 
@@ -83,6 +84,9 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     const renderPaymentHistory = () => {
+        const totalPaidAmount = allPayments.reduce((sum, payment) => sum + payment.amount, 0);
+        historyTotalPaidElement.textContent = `${totalPaidAmount.toLocaleString()} บาท`;
+
         paymentHistoryList.innerHTML = '';
         const paymentsByYear = allPayments.reduce((acc, payment) => {
             if (!acc[payment.year]) {
@@ -138,6 +142,9 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     const renderLoanList = () => {
+        const totalLoanAmount = allLoans.reduce((sum, loan) => sum + loan.amount, 0);
+        loanTotalAmountElement.textContent = `${totalLoanAmount.toLocaleString()} บาท`;
+        
         loanListElement.innerHTML = '';
         allLoans.forEach(loan => {
             const listItem = document.createElement('li');
