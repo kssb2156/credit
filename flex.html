@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Flex Message Editor (Secure)</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        body { font-family: sans-serif; padding: 15px; background-color: #f4f7f9; margin-bottom: 70px; }
+        .container { max-width: 600px; margin: auto; background-color: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        h1 { text-align: center; color: #2c3e50; }
+        .form-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 5px; font-weight: bold; color: #555; }
+        input[type="text"], input[type="number"], input[type="password"] { width: 100%; padding: 10px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 4px; }
+        button { width: 100%; padding: 12px; border: none; border-radius: 4px; background-color: #2980b9; color: white; font-size: 16px; cursor: pointer; margin-top: 10px; }
+        button:hover { background-color: #1a6088; }
+        .message { padding: 10px; margin-top: 10px; border-radius: 4px; text-align: center; font-weight: bold; }
+        .success { background-color: #d4edda; color: #155724; }
+        .error { background-color: #f8d7da; color: #721c24; }
+        
+        .collapsible-container { margin-top: 20px; }
+        .collapsible-header { background-color: #eee; padding: 10px; cursor: pointer; border-radius: 4px; font-weight: bold; display: flex; justify-content: space-between; align-items: center; }
+        .collapsible-header::after { content: '▼'; font-size: 14px; color: #777; transition: transform 0.3s; }
+        .collapsible-header.active::after { transform: rotate(180deg); }
+        .collapsible-content { display: none; overflow: hidden; background-color: #f1f1f1; padding: 15px; border-radius: 0 0 4px 4px; font-family: monospace; font-size: 12px; white-space: pre-wrap; word-wrap: break-word; }
+        .collapsible-content.show { display: block; }
+        
+        .hidden { display: none; }
+        .flex-buttons { display: flex; gap: 10px; margin-top: 10px; }
+        .flex-buttons button { width: 50%; }
+        
+        #login-section { text-align: center; }
+        #login-section input { margin-bottom: 10px; }
+
+        /* New styles for the navigation bar */
+        .tab-bar {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            background-color: #ffffff;
+            box-shadow: 0 -2px 5px rgba(0, 0, 0, 0.1);
+            display: flex;
+            justify-content: space-around;
+            padding: 10px 0;
+            z-index: 1000;
+        }
+        .tab-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-decoration: none;
+            color: #929292;
+            transition: color 0.3s;
+            flex: 1;
+        }
+        .tab-item.active {
+            color: #2c3e50;
+        }
+        .tab-icon {
+            font-size: 1.5rem;
+        }
+        .tab-label {
+            font-size: 0.75rem;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>แก้ไขข้อมูล</h1>
+
+    <div id="login-section">
+        <div class="form-group">
+            <label for="passcode">รหัสผ่าน:</label>
+            <input type="password" id="passcode">
+        </div>
+        <button onclick="checkPass()">เข้าสู่ระบบ</button>
+    </div>
+
+    <div id="editor-section" class="hidden">
+        <div class="form-group">
+            <label for="date">วันที่และเวลา:</label>
+            <input type="text" id="date" value="5 ก.ย. 68 18:11">
+        </div>
+        <div class="form-group">
+            <label for="paymentAmount">จำนวนเงิน:</label>
+            <input type="number" id="paymentAmount" value="0">
+        </div>
+        
+        <hr>
+        
+        <h5 style="text-align: center;">ข้อมูลจากหน้าหลัก</h5>
+        <div class="form-group">
+            <label for="pendingAmount">ยอดค้างชำระ:</label>
+            <input type="number" id="pendingAmount" value="0" readonly>
+        </div>
+        <div class="form-group">
+            <label for="paidAmount">ยอดชำระแล้ว:</label>
+            <input type="number" id="paidAmount" value="0" readonly>
+        </div>
+        
+        <hr>
+
+        <div class="flex-buttons">
+            <button onclick="generateJson()">สร้าง JSON</button>
+            <button onclick="copyToClipboard()">คัดลอก JSON</button>
+        </div>
+
+        <button onclick="window.open('https://line.me/R/ti/p/@wtz4404y', '_blank')">เปิดลิงก์ LIFF</button>
+        
+        <div id="message-status" class="message"></div>
+
+        <div class="collapsible-container">
+            <div class="collapsible-header" onclick="toggleJson()">ดูโค้ด JSON</div>
+            <pre id="json-output" class="collapsible-content"></pre>
+        </div>
+    </div>
+</div>
+
+<nav class="tab-bar">
+    <a href="index.html" class="tab-item">
+        <i class="fas fa-home tab-icon"></i>
+        <span class="tab-label">สรุป</span>
+    </a>
+    <a href="index.html" class="tab-item">
+        <i class="fas fa-history tab-icon"></i>
+        <span class="tab-label">ประวัติ</span>
+    </a>
+    <a href="index.html" class="tab-item">
+        <i class="fas fa-file-invoice-dollar tab-icon"></i>
+        <span class="tab-label">เงินยืม</span>
+    </a>
+    <a href="#" class="tab-item active">
+        <i class="fas fa-user-shield tab-icon"></i>
+        <span class="tab-label">Admin</span>
+    </a>
+</nav>
+
+<script>
+    const TOTAL_LOAN_AMOUNT = 65400.00;
+    const CORRECT_PASSCODE = "1234";
+
+    // ✅ เพิ่มโค้ดส่วนนี้เข้าไป เพื่อดึงค่าจาก localStorage เมื่อหน้าโหลดเสร็จ
+    document.addEventListener('DOMContentLoaded', () => {
+        const totalPaid = localStorage.getItem('totalPaidAmount');
+        const totalOutstanding = localStorage.getItem('totalOutstandingAmount');
+
+        if (totalPaid) {
+            document.getElementById('paidAmount').value = parseFloat(totalPaid);
+        }
+        if (totalOutstanding) {
+            document.getElementById('pendingAmount').value = parseFloat(totalOutstanding);
+        }
+    });
+
+    function checkPass() {
+        const passcode = document.getElementById('passcode').value;
+        if (passcode === CORRECT_PASSCODE) {
+            document.getElementById('login-section').classList.add('hidden');
+            document.getElementById('editor-section').classList.remove('hidden');
+        } else {
+            alert('รหัสผ่านไม่ถูกต้อง');
+        }
+    }
+
+    function generateJson() {
+        const date = document.getElementById('date').value;
+        const paymentAmount = parseFloat(document.getElementById('paymentAmount').value || 0);
+        const pendingAmount = parseFloat(document.getElementById('pendingAmount').value || 0);
+        const paidAmount = parseFloat(document.getElementById('paidAmount').value || 0);
+        
+        function formatNumber(num) {
+            return parseFloat(num).toFixed(2).replace(/\d(?=(\d{3})+\.)/g, '$&,');
+        }
+
+        const formattedPayment = formatNumber(paymentAmount);
+        const formattedPending = formatNumber(pendingAmount);
+        const formattedPaid = formatNumber(paidAmount);
+        const formattedTotalLoan = formatNumber(TOTAL_LOAN_AMOUNT);
+        
+        const progressPercent = (TOTAL_LOAN_AMOUNT > 0) ? (paidAmount / TOTAL_LOAN_AMOUNT) * 100 : 0;
+        
+        const flexJson = {
+            "type": "bubble",
+            "size": "mega",
+            "header": {
+                "type": "box",
+                "layout": "vertical",
+                "backgroundColor": "#2c3e50",
+                "paddingAll": "16px",
+                "contents": [
+                    { "type": "text", "text": "รายการเงินเข้า", "weight": "bold", "size": "md", "align": "start", "color": "#ffffff" },
+                    { "type": "text", "text": "หมายเลข: xxx-xxx979-3", "weight": "bold", "size": "xs", "align": "start", "margin": "none", "color": "#A9A9A9" },
+                    { "type": "text", "text": "ชื่อ: เกรียงศักดิ์ xx", "color": "#A9A9A9", "margin": "none", "size": "xs" },
+                    { "type": "text", "text": date, "color": "#A9A9A9", "margin": "none", "size": "xxs" },
+                    {
+                        "type": "box",
+                        "layout": "vertical",
+                        "backgroundColor": "#2c3e50",
+                        "paddingAll": "16px",
+                        "contents": [
+                            { "type": "text", "text": "จำนวนเงิน", "weight": "bold", "size": "md", "align": "start", "color": "#ffffff", "margin": "none" },
+                            { "type": "text", "text": `${formattedPayment} บาท`, "weight": "bold", "size": "xxl", "align": "center", "margin": "md", "color": "#f1c40f" }
+                        ],
+                        "spacing": "none"
+                    }
+                ]
+            },
+            "body": {
+                "type": "box",
+                "layout": "vertical",
+                "paddingAll": "16px",
+                "contents": [
+                    {
+                        "type": "box",
+                        "layout": "horizontal",
+                        "contents": [
+                            { "type": "box", "layout": "vertical", "flex": 1, "contents": [
+                                { "type": "text", "text": "ยอดค้างชำระ", "size": "sm", "weight": "bold", "color": "#555555", "margin": "none" },
+                                { "type": "text", "text": formattedPending, "size": "lg", "weight": "bold", "color": "#FF0000", "margin": "md" }
+                            ]},
+                            { "type": "box", "layout": "vertical", "flex": 1, "contents": [
+                                { "type": "text", "text": "ยอดชำระแล้ว", "size": "sm", "weight": "bold", "color": "#555555", "align": "end" },
+                                { "type": "text", "text": formattedPaid, "size": "lg", "weight": "bold", "color": "#1DB446", "margin": "md", "align": "end" }
+                            ]}
+                        ]
+                    },
+                    { "type": "separator", "margin": "lg" },
+                    { "type": "text", "text": "ความคืบหน้าการชำระ", "margin": "md", "weight": "bold", "color": "#333333" },
+                    {
+                        "type": "box",
+                        "layout": "vertical",
+                        "margin": "sm",
+                        "contents": [
+                            { "type": "box", "layout": "horizontal", "backgroundColor": "#eeeeee", "height": "10px", "cornerRadius": "5px", "contents": [
+                                { "type": "box", "layout": "vertical", "backgroundColor": "#1DB446", "width": `${progressPercent}%`, "height": "10px", "cornerRadius": "5px", "contents": [{ "type": "text", "text": " ", "size": "xxs", "color": "#eeeeee" }] }
+                            ] }
+                        ]
+                    },
+                    { "type": "text", "text": `ยอดเงินการยืมทั้งหมด: ${formattedTotalLoan} บาท`, "size": "sm", "color": "#aaaaaa", "wrap": true, "margin": "md" }
+                ]
+            },
+            "footer": {
+                "type": "box",
+                "layout": "vertical",
+                "contents": [
+                    { "type": "button", "style": "primary", "color": "#2980b9", "action": { "type": "uri", "label": "ดูรายละเอียดทั้งหมด", "uri": "https://liff.line.me/2008088662-J5R3nKNZ" } }
+                ],
+                "spacing": "none",
+                "margin": "none"
+            }
+        };
+
+        document.getElementById('json-output').textContent = JSON.stringify(flexJson, null, 2);
+        
+        const statusDiv = document.getElementById('message-status');
+        statusDiv.textContent = 'สร้าง Flex Message JSON เรียบร้อยแล้ว ✅';
+        statusDiv.classList.remove('error');
+        statusDiv.classList.add('success');
+    }
+
+    function copyToClipboard() {
+        const jsonOutput = document.getElementById('json-output').textContent;
+        const statusDiv = document.getElementById('message-status');
+        
+        if (!jsonOutput) {
+            statusDiv.textContent = 'กรุณาสร้าง JSON ก่อน! ❌';
+            statusDiv.classList.remove('success');
+            statusDiv.classList.add('error');
+            return;
+        }
+        
+        navigator.clipboard.writeText(jsonOutput).then(() => {
+            statusDiv.textContent = 'คัดลอกโค้ด JSON เรียบร้อยแล้ว! 📋';
+            statusDiv.classList.remove('error');
+            statusDiv.classList.add('success');
+        }).catch(err => {
+            statusDiv.textContent = 'คัดลอกไม่สำเร็จ: ' + err;
+            statusDiv.classList.remove('success');
+            statusDiv.classList.add('error');
+        });
+    }
+
+    function toggleJson() {
+        const content = document.getElementById('json-output');
+        const header = document.querySelector('.collapsible-header');
+        
+        if (content.classList.contains('show')) {
+            content.classList.remove('show');
+            header.classList.remove('active');
+        } else {
+            content.classList.add('show');
+            header.classList.add('active');
+        }
+    }
+</script>
+
+</body>
+</html>
