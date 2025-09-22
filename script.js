@@ -64,7 +64,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const renderLatestPayments = () => {
         latestPaymentList.innerHTML = '';
-        const latestPayments = allPayments.slice(0, 2); 
+        const latestPayments = allPayments.slice(0, 5); 
         
         if (latestPayments.length === 0) {
             latestPaymentList.innerHTML = '<li class="list-group-item text-center text-muted">ไม่พบรายการชำระเงินล่าสุด</li>';
