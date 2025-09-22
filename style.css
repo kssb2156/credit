@@ -1,84 +1,128 @@
+@import url('https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css');
+@import url('https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;600;700&display=swap');
+
+/* Basic setup and font */
 :root {
-    --primary-color: #0d6efd;
-    --success-color: #198754;
-    --warning-color: #ffc107;
-    --dark-color: #343a40;
-    --light-bg: #f8f9fa;
+    --primary-color: #4a69bd;
+    --success-color: #55a630;
+    --danger-color: #d83d3d;
+    --warning-color: #f7a61d;
+    --info-color: #4db6ac;
+    --light-bg: #f0f4f8;
     --card-bg: #ffffff;
     --tab-bar-bg: #ffffff;
+    --shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    --border-radius-lg: 25px;
+    --border-radius-md: 12px;
 }
 
 body {
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     background-color: var(--light-bg);
-    min-height: 100vh;
+    font-family: 'Kanit', sans-serif;
+    color: #333;
+    margin: 0;
+    padding: 0;
 }
 
-/* App Page */
+/* App container */
 .app-container {
-    display: flex;
-    flex-direction: column;
-    min-height: 100vh;
-    padding-bottom: 70px;
-}
-
-header {
+    max-width: 500px;
+    margin: 0 auto;
     background-color: var(--card-bg);
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    min-height: 100vh;
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+    position: relative;
+    padding-bottom: 70px;
+    overflow-x: hidden;
 }
 
+/* Header */
+header {
+    background: var(--primary-color);
+    color: #fff;
+    padding: 1.5rem 1rem;
+    border-bottom-left-radius: var(--border-radius-lg);
+    border-bottom-right-radius: var(--border-radius-lg);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    text-align: center;
+}
+
+header h1 {
+    font-size: 1.5rem;
+    font-weight: 600;
+    margin: 0;
+}
+
+/* Main content area */
 .tab-content {
-    flex-grow: 1;
-    overflow-y: auto;
+    padding: 1rem;
 }
 
 /* Summary Cards */
 .summary-card {
-    background-color: var(--card-bg);
-    padding: 1.5rem;
-    border-radius: 1rem;
-    box-shadow: 0 0.25rem 0.5rem rgba(0, 0, 0, 0.05);
     display: flex;
     align-items: center;
-    gap: 1rem;
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    gap: 0.8rem;
+    padding: 1.25rem;
+    border-radius: var(--border-radius-md);
+    color: #fff;
+    box-shadow: 0 3px 12px rgba(0, 0, 0, 0.1);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
 
 .summary-card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.1);
+    transform: translateY(-3px);
+    box-shadow: 0 6px 15px rgba(0, 0, 0, 0.2);
 }
 
 .summary-icon {
-    font-size: 2.5rem;
+    font-size: 2rem;
+    opacity: 0.9;
 }
 
 .summary-label {
+    font-size: 0.8rem;
+    opacity: 0.9;
+    font-weight: 300;
     margin-bottom: 0;
-    color: #6c757d;
 }
 
 .summary-value {
-    margin-bottom: 0;
-    font-weight: 600;
+    font-size: 1.5rem;
+    font-weight: bold;
+    margin: 0;
 }
 
-.total-loan-card .summary-icon { color: var(--primary-color); }
-.total-paid-card .summary-icon { color: var(--success-color); }
-.total-outstanding-card .summary-icon { color: var(--warning-color); }
+.total-loan-card {
+    background-color: var(--primary-color);
+}
+.total-paid-card {
+    background-color: var(--success-color);
+}
+.total-outstanding-card {
+    background-color: var(--danger-color);
+}
+.loan-item .fw-bold {
+    color: var(--danger-color);
+}
+.history-item .fw-bold {
+    color: var(--success-color);
+}
 
 /* List Items */
 .list-group-item {
-    border: none;
-    border-radius: 0.75rem !important;
-    margin-bottom: 0.5rem;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    border-radius: 10px;
+    margin-bottom: 10px;
+    background-color: #f7f9fc;
+    border: 1px solid #e0e6ed;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    padding: 1rem;
 }
 
-.view-slip-btn {
-    border: none;
-    background-color: transparent;
-    color: var(--primary-color);
+.list-group-item:hover {
+    transform: translateX(5px);
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
 }
 
 /* Tab Bar */
@@ -86,66 +130,122 @@ header {
     position: fixed;
     bottom: 0;
     left: 0;
-    width: 100%;
-    background-color: var(--tab-bar-bg);
-    box-shadow: 0 -2px 5px rgba(0, 0, 0, 0.1);
+    right: 0;
     display: flex;
     justify-content: space-around;
-    padding: 10px 0;
-    z-index: 1000;
+    align-items: center;
+    background-color: var(--tab-bar-bg);
+    height: 70px;
+    border-top: 1px solid #e0e0e0;
+    box-shadow: 0 -5px 15px rgba(0,0,0,0.05);
+    z-index: 10;
 }
 
 .tab-item {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
+    text-align: center;
+    color: #999;
     text-decoration: none;
-    color: #929292;
-    transition: color 0.3s;
+    padding: 0.5rem;
+    transition: color 0.3s, transform 0.3s;
     flex: 1;
+}
+
+.tab-item:hover {
+    color: var(--primary-color);
 }
 
 .tab-item.active {
     color: var(--primary-color);
+    transform: translateY(-5px);
 }
 
-.tab-icon {
-    font-size: 1.5rem;
-    margin-bottom: 5px;
-}
-
-.tab-label {
-    font-size: 0.8rem;
-}
-
-.tab-pane {
-    display: none;
-}
-
-.tab-pane.active {
+.tab-item .tab-icon {
     display: block;
+    font-size: 1.5rem;
+    margin-bottom: 4px;
+}
+
+.tab-item .tab-label {
+    font-size: 0.8rem;
+    font-weight: 600;
+}
+
+/* History & Loan pages */
+.year-dropdown {
+    margin-bottom: 1rem;
 }
 
 .year-header {
-    background-color: #e9ecef;
+    background-color: #e0e6ed;
+    color: var(--primary-color);
+    border-radius: var(--border-radius-md);
+    padding: 15px;
+    font-size: 1.2rem;
+    font-weight: bold;
     cursor: pointer;
-    user-select: none;
-    transition: background-color 0.2s ease;
+    transition: background-color 0.3s ease;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
 }
 
 .year-header:hover {
-    background-color: #dee2e6;
+    background-color: #c4d4e3;
 }
 
-.toggle-icon {
-    transition: transform 0.3s ease;
+.year-list {
+    background-color: var(--card-bg);
+    border: 1px solid #e0e6ed;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    z-index: 1000;
+    overflow: hidden;
+    position: absolute;
+    width: 100%;
+}
+
+.year-list .year-option {
+    padding: 15px;
+    font-size: 1.1rem;
+    color: #333;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.year-list .year-option:hover {
+    background-color: var(--light-bg);
 }
 
 .year-list.d-none {
-    display: none;
+    display: none !important;
 }
 
-.loan-item .text-danger {
-    color: #dc3545;
+.month-header {
+    background-color: #f0f4f8;
+    border-radius: 10px;
+    padding: 12px;
+    font-size: 1.1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    margin-bottom: 8px;
 }
 
+.month-header:hover {
+    background-color: #e2e8f0;
+}
+
+.view-slip-btn {
+    background-color: transparent;
+    border: none;
+    color: var(--primary-color);
+    font-size: 1.2rem;
+    padding: 0.25rem;
+    border-radius: 50%;
+    transition: background-color 0.2s;
+}
+
+.view-slip-btn:hover {
+    background-color: #e0e6ed;
+}
+
+.month-list.d-none {
+    display: none !important;
+}
