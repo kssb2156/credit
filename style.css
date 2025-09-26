@@ -1,4 +1,3 @@
-@import url('https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css');
 @import url('https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;600;700&display=swap');
 
 /* Basic setup and font */
@@ -16,23 +15,35 @@
     --border-radius-md: 12px;
 }
 
-body {
-    background-color: var(--light-bg);
-    font-family: 'Kanit', sans-serif;
-    color: #333;
+/* 1. ตั้งค่า Body/HTML: ล็อกหน้าจอหลักไม่ให้เลื่อน! (แก้ไขปัญหาแถบเลื่อนซ้อน) */
+html, body {
+    height: 100%;
+    overflow: hidden; 
     margin: 0;
     padding: 0;
 }
 
-/* App container */
+body {
+    background-color: var(--light-bg);
+    font-family: 'Kanit', sans-serif;
+    color: #333;
+}
+
+/* 2. App container: เป็นตัวเลื่อนหลัก (จำลองหน้าจอมือถือ) */
 .app-container {
     max-width: 500px;
     margin: 0 auto;
     background-color: var(--card-bg);
-    min-height: 100vh;
+    
+    height: 100vh; /* ให้สูงเท่าความสูงของ viewport */
+    overflow-y: auto; /* อนุญาตให้เลื่อนได้เฉพาะภายในกรอบนี้ */
+    
     box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
     position: relative;
-    padding-bottom: 70px;
+    
+    /* 3. Padding ด้านล่าง: ดันเนื้อหาให้พ้น Tab Bar (70px) */
+    padding-bottom: 80px; 
+    
     overflow-x: hidden;
 }
 
@@ -40,7 +51,7 @@ body {
 header {
     background: var(--primary-color);
     color: #fff;
-    padding: 1.5rem 1rem;
+    padding: 2rem 0.1rem 1.5rem 0.1rem; 
     border-bottom-left-radius: var(--border-radius-lg);
     border-bottom-right-radius: var(--border-radius-lg);
     box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
@@ -49,14 +60,54 @@ header {
 
 header h1 {
     font-size: 1.5rem;
-    font-weight: 600;
+    font-weight: 700;
     margin: 0;
 }
 
 /* Main content area */
 .tab-content {
     padding: 0.1rem;
+    padding-top: 1rem;
 }
+
+/* *** ปรับปรุง CSS สำหรับ Accordion ในแท็บประวัติชำระ (History Tab) *** */
+.history-accordion-item {
+    border: 1px solid #e0e6ed;
+    margin-bottom: 10px;
+    border-radius: var(--border-radius-md);
+    overflow: hidden;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+}
+
+/* หัวข้อ Accordion */
+.history-accordion-item .accordion-button {
+    font-weight: 600;
+    font-size: 1.05rem;
+    color: var(--primary-color);
+    background-color: var(--light-bg); 
+    padding: 1rem;
+    transition: background-color 0.2s ease, box-shadow 0.2s ease;
+    border-radius: var(--border-radius-md) !important;
+}
+
+/* เอฟเฟกต์เมื่อ Hover/Focus/Open ที่หัวข้อ Accordion */
+.history-accordion-item .accordion-button:not(.collapsed) {
+    background-color: var(--primary-color);
+    color: #fff;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+.history-accordion-item .accordion-button:not(.collapsed) span {
+    color: #fff !important; 
+}
+.history-accordion-item .accordion-button:focus {
+    box-shadow: 0 0 0 0.25rem rgba(74, 105, 189, 0.25);
+}
+
+/* เนื้อหา Accordion Body */
+.history-accordion-item .accordion-body {
+    padding: 0; 
+}
+
 
 /* Summary Cards */
 .summary-card {
@@ -93,6 +144,17 @@ header h1 {
     margin: 0;
 }
 
+/* ลูกเล่น 1: Animation for zero balance */
+.total-outstanding-card .summary-value.zero-balance {
+    animation: zeroPulse 1.5s infinite;
+    color: #fff; 
+}
+@keyframes zeroPulse {
+    0% { text-shadow: 0 0 5px rgba(255, 255, 255, 0.4); }
+    50% { text-shadow: 0 0 15px rgba(255, 255, 255, 0.8); }
+    100% { text-shadow: 0 0 5px rgba(255, 255, 255, 0.4); }
+}
+
 .total-loan-card {
     background-color: var(--primary-color);
 }
@@ -109,28 +171,50 @@ header h1 {
     color: var(--success-color);
 }
 
-/* List Items */
+/* List Items (สำหรับแท็บสรุปและแท็บยืม) */
 .list-group-item {
     border-radius: 10px;
     margin-bottom: 10px;
     background-color: #f7f9fc;
     border: 1px solid #e0e6ed;
     box-shadow: 0 2px 5px rgba(0,0,0,0.05);
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    transition: transform 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease; 
     padding: 1rem;
 }
 
 .list-group-item:hover {
-    transform: translateX(5px);
-    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    transform: translateY(-2px); 
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1); 
+}
+
+/* ลบ margin/shadow ออกจาก list item ภายใน accordion/list-group-flush */
+.list-group-flush .list-group-item {
+    border-radius: 0;
+    margin-bottom: 0;
+    box-shadow: none;
+    border-left: 0;
+    border-right: 0;
+    background-color: transparent;
+    border-top: 1px solid #e0e6ed; 
+    transition: background-color 0.2s ease;
+}
+.list-group-flush .list-group-item:first-child {
+    border-top: none;
+}
+
+.list-group-flush .list-group-item:hover {
+    transform: none;
+    background-color: #eff3f7;
 }
 
 /* Tab Bar */
 .tab-bar {
     position: fixed;
     bottom: 0;
-    left: 0;
-    right: 0;
+    max-width: 500px;
+    width: 100%; 
+    left: 50%;
+    transform: translateX(-50%);
     display: flex;
     justify-content: space-around;
     align-items: center;
@@ -171,67 +255,6 @@ header h1 {
 }
 
 /* History & Loan pages */
-.year-dropdown {
-    margin-bottom: 1rem;
-}
-
-.year-header {
-    background-color: #e0e6ed;
-    color: var(--primary-color);
-    border-radius: var(--border-radius-md);
-    padding: 15px;
-    font-size: 1.2rem;
-    font-weight: bold;
-    cursor: pointer;
-    transition: background-color 0.3s ease;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
-}
-
-.year-header:hover {
-    background-color: #c4d4e3;
-}
-
-.year-list {
-    background-color: var(--card-bg);
-    border: 1px solid #e0e6ed;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-    z-index: 1000;
-    overflow: hidden;
-    position: absolute;
-    width: 100%;
-}
-
-.year-list .year-option {
-    padding: 15px;
-    font-size: 1.1rem;
-    color: #333;
-    cursor: pointer;
-    transition: background-color 0.2s;
-}
-
-.year-list .year-option:hover {
-    background-color: var(--light-bg);
-}
-
-.year-list.d-none {
-    display: none !important;
-}
-
-.month-header {
-    background-color: #f0f4f8;
-    border-radius: 10px;
-    padding: 12px;
-    font-size: 1.1rem;
-    font-weight: 600;
-    cursor: pointer;
-    transition: background-color 0.3s ease;
-    margin-bottom: 8px;
-}
-
-.month-header:hover {
-    background-color: #e2e8f0;
-}
-
 .view-slip-btn {
     background-color: transparent;
     border: none;
@@ -239,13 +262,10 @@ header h1 {
     font-size: 1.2rem;
     padding: 0.25rem;
     border-radius: 50%;
-    transition: background-color 0.2s;
+    transition: background-color 0.2s, color 0.2s; 
 }
 
 .view-slip-btn:hover {
-    background-color: #e0e6ed;
-}
-
-.month-list.d-none {
-    display: none !important;
+    background-color: var(--primary-color);
+    color: var(--card-bg);
 }
