@@ -67,7 +67,7 @@ header h1 {
 /* Main content area */
 .tab-content {
     padding: 0.1rem;
-    padding-top: 1rem;
+    padding-top: 0.1rem;
 }
 
 /* *** ปรับปรุง CSS สำหรับ Accordion ในแท็บประวัติชำระ (History Tab) *** */
