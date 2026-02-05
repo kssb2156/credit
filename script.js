@@ -1,5 +1,6 @@
 // ข้อมูลรายการชำระเงินทั้งหมด (ใช้ปี พ.ศ. 256x)
 const allPayments = [
+    { date: '05/02/2569', amount: 2000, description: 'ชำระเงิน', year: 2569, slip: 'https://s.imgz.io/2026/02/05/imaged8490f4aa15c209f.png' },   
     { date: '05/01/2569', amount: 2000, description: 'ชำระเงิน', year: 2569, slip: 'https://s.imgz.io/2026/01/05/imagef6f4533590ba717e.png' },
     { date: '05/12/2568', amount: 2000, description: 'ชำระเงิน', year: 2568, slip: 'https://s.imgz.io/2025/12/05/image924af375ed5493b2.png' },
     { date: '05/11/2568', amount: 2000, description: 'ชำระเงิน', year: 2568, slip: 'https://s.imgz.io/2025/11/05/imagee4e3d50fd8ecc4f8.png' },
