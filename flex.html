@@ -3,8 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Flex Message Editor (Secure)</title>
+    <title>Flex Message Editor & Slip OCR</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <!-- โหลด Tesseract.js สำหรับอ่านสลิป -->
+    <script src='https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js'></script>
     <style>
         body { font-family: sans-serif; padding: 15px; background-color: #f4f7f9; margin-bottom: 70px; }
         .container { max-width: 600px; margin: auto; background-color: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
@@ -17,6 +19,8 @@
         .message { padding: 10px; margin-top: 10px; border-radius: 4px; text-align: center; font-weight: bold; }
         .success { background-color: #d4edda; color: #155724; }
         .error { background-color: #f8d7da; color: #721c24; }
+        
+        .ocr-section { background-color: #eef2f7; padding: 15px; border-radius: 6px; margin-bottom: 20px; border: 1px dashed #2980b9; }
         
         .collapsible-container { margin-top: 20px; }
         .collapsible-header { background-color: #eee; padding: 10px; cursor: pointer; border-radius: 4px; font-weight: bold; display: flex; justify-content: space-between; align-items: center; }
@@ -32,7 +36,6 @@
         #login-section { text-align: center; }
         #login-section input { margin-bottom: 10px; }
 
-        /* New styles for the navigation bar */
         .tab-bar {
             position: fixed;
             bottom: 0;
@@ -54,15 +57,9 @@
             transition: color 0.3s;
             flex: 1;
         }
-        .tab-item.active {
-            color: #2c3e50;
-        }
-        .tab-icon {
-            font-size: 1.5rem;
-        }
-        .tab-label {
-            font-size: 0.75rem;
-        }
+        .tab-item.active { color: #2c3e50; }
+        .tab-icon { font-size: 1.5rem; }
+        .tab-label { font-size: 0.75rem; }
     </style>
 </head>
 <body>
@@ -79,6 +76,14 @@
     </div>
 
     <div id="editor-section" class="hidden">
+        
+        <!-- ส่วนเพิ่มสำหรับอัปโหลดและอ่านสลิป (OCR) -->
+        <div class="ocr-section">
+            <label for="slipInput"><i class="fas fa-file-invoice"></i> อัปโหลดสลิปโอนเงินเพื่อเติมข้อมูลอัติโนมัติ:</label>
+            <input type="file" id="slipInput" accept="image/*">
+            <p id="ocrStatus" style="font-size: 13px; color: #2980b9; margin-top: 5px;"></p>
+        </div>
+
         <div class="form-group">
             <label for="date">วันที่และเวลา:</label>
             <input type="text" id="date" value="5 ก.ย. 68 18:11">
@@ -141,7 +146,6 @@
     const TOTAL_LOAN_AMOUNT = 65400.00;
     const CORRECT_PASSCODE = "1234";
 
-    // ✅ เพิ่มโค้ดส่วนนี้เข้าไป เพื่อดึงค่าจาก localStorage เมื่อหน้าโหลดเสร็จ
     document.addEventListener('DOMContentLoaded', () => {
         const totalPaid = localStorage.getItem('totalPaidAmount');
         const totalOutstanding = localStorage.getItem('totalOutstandingAmount');
@@ -161,6 +165,79 @@
             document.getElementById('editor-section').classList.remove('hidden');
         } else {
             alert('รหัสผ่านไม่ถูกต้อง');
+        }
+    }
+
+    // ฟังก์ชันจัดการ OCR อ่านสลิป
+    document.getElementById('slipInput').addEventListener('change', async function(e) {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        const statusEl = document.getElementById('ocrStatus');
+        statusEl.innerText = "กำลังอ่านข้อมูลจากสลิป (OCR)... กรุณารอสักครู่";
+
+        try {
+            const worker = await Tesseract.createWorker('tha+eng');
+            const ret = await worker.recognize(file);
+            const text = ret.data.text;
+            await worker.terminate();
+
+            statusEl.innerText = "อ่านสลิปสำเร็จ! เติมข้อมูลให้แล้ว ✅";
+            parseSlipDataToForm(text);
+
+        } catch (error) {
+            console.error(error);
+            statusEl.innerText = "เกิดข้อผิดพลาดในการอ่านภาพสลิป ❌";
+        }
+    });
+
+    function parseSlipDataToForm(text) {
+        const cleanedText = text.replace(/[ \t]+/g, ' ');
+
+        // 1. ค้นหายอดเงิน
+        let amount = null;
+        const amountPatterns = [
+            /(?:จำนวน|โอนเงิน|ยอดเงิน|THB|฿)[\s:]*([0-9,]+\.\d{2})/i,
+            /([0-9,]+\.\d{2})\s*(?:บาท|THB)/i
+        ];
+        
+        for (let pattern of amountPatterns) {
+            const match = cleanedText.match(pattern);
+            if (match) {
+                amount = match[1].replace(/,/g, '');
+                break;
+            }
+        }
+        if (!amount) {
+            const allAmounts = cleanedText.match(/\b\d{1,3}(?:,\d{3})*\.\d{2}\b/g);
+            if (allAmounts && allAmounts.length > 0) {
+                amount = allAmounts[0].replace(/,/g, '');
+            }
+        }
+
+        // 2. ค้นหาวันที่
+        let date = null;
+        const dateMatch = cleanedText.match(/(\d{1,2}[/-]\d{1,2}[/-]\d{2,4})/) || 
+                          cleanedText.match(/(\d{1,2}\s+(?:ม\.ค\.|ก\.พ\.|มี\.ค\.|เม\.ย\.|พ\.ค\.|มิ\.ย\.|ก\.ค\.|ส\.ค\.|ก\.ย\.|ต\.ค\.|พ\.ย\.|ธ\.ค\.)\s+\d{2,4})/);
+        if (dateMatch) {
+            date = dateMatch[1];
+        }
+
+        // 3. ค้นหาเวลา
+        let time = null;
+        const timeMatch = cleanedText.match(/(\d{2}:\d{2}(?::\d{2})?)/);
+        if (timeMatch) {
+            time = timeMatch[1];
+        }
+
+        // นำค่าที่สกัดได้ไปใส่ในช่อง Input อัตโนมัติ
+        if (amount) {
+            document.getElementById('paymentAmount').value = amount;
+        }
+        if (date && time) {
+            document.getElementById('date').value = `${date} ${time}`;
+        } else if (date) {
+            document.getElementById('date').value = date;
         }
     }
 
