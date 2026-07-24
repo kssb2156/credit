@@ -4,6 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Flex Message Editor & Slip OCR</title>
+    <!-- Cache Control Meta Tags -->
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <!-- โหลด Tesseract.js สำหรับอ่านสลิป -->
     <script src='https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js'></script>
@@ -60,6 +64,26 @@
         .tab-item.active { color: #2c3e50; }
         .tab-icon { font-size: 1.5rem; }
         .tab-label { font-size: 0.75rem; }
+
+        /* ปุ่มเคลียร์แคช */
+        .btn-clear-cache {
+            width: auto;
+            padding: 8px 14px;
+            background-color: #e74c3c;
+            color: white;
+            border-radius: 6px;
+            font-size: 14px;
+            margin-top: 15px;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .btn-clear-cache:hover {
+            background-color: #c0392b;
+        }
+        .btn-clear-cache i {
+            font-size: 14px;
+        }
     </style>
 </head>
 <body>
@@ -120,6 +144,15 @@
             <div class="collapsible-header" onclick="toggleJson()">ดูโค้ด JSON</div>
             <pre id="json-output" class="collapsible-content"></pre>
         </div>
+
+        <hr>
+        <!-- ปุ่มเคลียร์แคช -->
+        <div style="text-align: center; margin-top: 10px;">
+            <button class="btn-clear-cache" onclick="clearCacheAndReload()">
+                <i class="fas fa-sync-alt"></i> เคลียร์แคช & รีเฟรช
+            </button>
+            <p style="font-size: 12px; color: #999; margin-top: 8px;" id="admin-version-info"></p>
+        </div>
     </div>
 </div>
 
@@ -156,6 +189,15 @@
         if (totalOutstanding) {
             document.getElementById('pendingAmount').value = parseFloat(totalOutstanding);
         }
+
+        // แสดงเวอร์ชัน
+        const versionEl = document.getElementById('admin-version-info');
+        if (versionEl) {
+            const lastUpdate = localStorage.getItem('lastCacheUpdate');
+            if (lastUpdate) {
+                versionEl.textContent = `อัพเดตล่าสุด: ${lastUpdate}`;
+            }
+        }
     });
 
     function checkPass() {
@@ -165,6 +207,43 @@
             document.getElementById('editor-section').classList.remove('hidden');
         } else {
             alert('รหัสผ่านไม่ถูกต้อง');
+        }
+    }
+
+    // ฟังก์ชันเคลียร์แคชและรีโหลด
+    async function clearCacheAndReload() {
+        try {
+            // 1. ลบ Service Worker caches ทั้งหมด
+            if ('caches' in window) {
+                const cacheNames = await caches.keys();
+                await Promise.all(
+                    cacheNames.map(cacheName => caches.delete(cacheName))
+                );
+            }
+
+            // 2. ยกเลิกการลงทะเบียน Service Workers ทั้งหมด
+            if ('serviceWorker' in navigator) {
+                const registrations = await navigator.serviceWorker.getRegistrations();
+                await Promise.all(
+                    registrations.map(registration => registration.unregister())
+                );
+            }
+
+            // 3. บันทึกเวลาอัพเดต
+            const now = new Date();
+            const timeStr = now.toLocaleString('th-TH', { 
+                year: 'numeric', month: 'short', day: 'numeric',
+                hour: '2-digit', minute: '2-digit' 
+            });
+            localStorage.setItem('lastCacheUpdate', timeStr);
+
+            // 4. Force reload โดยข้ามแคช
+            window.location.href = window.location.pathname + '?v=' + Date.now();
+            
+        } catch (error) {
+            console.error('เคลียร์แคชไม่สำเร็จ:', error);
+            // Fallback: ใช้วิธี reload ธรรมดา
+            window.location.reload(true);
         }
     }
 
@@ -192,13 +271,18 @@
     });
 
     function parseSlipDataToForm(text) {
-        const cleanedText = text.replace(/[ \t]+/g, ' ');
+        const cleanedText = text.replace(/[ \t]+/g, ' ').replace(/\n+/g, ' ');
+        console.log('[OCR Debug] ข้อความที่อ่านได้:', cleanedText);
 
-        // 1. ค้นหายอดเงิน
+        // 1. ค้นหายอดเงิน (รองรับหลายรูปแบบ)
         let amount = null;
         const amountPatterns = [
-            /(?:จำนวน|โอนเงิน|ยอดเงิน|THB|฿)[\s:]*([0-9,]+\.\d{2})/i,
-            /([0-9,]+\.\d{2})\s*(?:บาท|THB)/i
+            // "จำนวน: 2,000.00" หรือ "จำนวนเงิน 2,000.00"
+            /(?:จำนวน(?:เงิน)?|โอนเงิน|ยอดเงิน|ยอดโอน|THB|฿)[\s:]*([0-9,]+\.\d{2})/i,
+            // "2,000.00 บาท" หรือ "2,000.00 THB"
+            /([0-9,]+\.\d{2})\s*(?:บาท|THB|baht)/i,
+            // "จำนวน 2,000" (ไม่มีทศนิยม)
+            /(?:จำนวน(?:เงิน)?)[\s:]*([0-9,]+)(?:\s*บาท)?/i
         ];
         
         for (let pattern of amountPatterns) {
@@ -208,27 +292,60 @@
                 break;
             }
         }
+        // Fallback: หาตัวเลขที่มีทศนิยม 2 ตำแหน่ง (ข้ามค่า 0.00)
         if (!amount) {
-            const allAmounts = cleanedText.match(/\b\d{1,3}(?:,\d{3})*\.\d{2}\b/g);
+            const allAmounts = cleanedText.match(/\d{1,3}(?:,\d{3})*\.\d{2}/g);
             if (allAmounts && allAmounts.length > 0) {
-                amount = allAmounts[0].replace(/,/g, '');
+                // เลือกจำนวนที่ไม่ใช่ 0.00
+                for (let a of allAmounts) {
+                    const val = parseFloat(a.replace(/,/g, ''));
+                    if (val > 0) {
+                        amount = a.replace(/,/g, '');
+                        break;
+                    }
+                }
             }
         }
 
-        // 2. ค้นหาวันที่
+        // 2. ค้นหาวันที่ (รองรับหลายรูปแบบสลิปไทย)
         let date = null;
-        const dateMatch = cleanedText.match(/(\d{1,2}[/-]\d{1,2}[/-]\d{2,4})/) || 
-                          cleanedText.match(/(\d{1,2}\s+(?:ม\.ค\.|ก\.พ\.|มี\.ค\.|เม\.ย\.|พ\.ค\.|มิ\.ย\.|ก\.ค\.|ส\.ค\.|ก\.ย\.|ต\.ค\.|พ\.ย\.|ธ\.ค\.)\s+\d{2,4})/);
-        if (dateMatch) {
-            date = dateMatch[1];
+        const thaiMonths = 'ม\\.?ค\\.?|ก\\.?พ\\.?|มี\\.?ค\\.?|เม\\.?ย\\.?|พ\\.?ค\\.?|มิ\\.?ย\\.?|ก\\.?ค\\.?|ส\\.?ค\\.?|ก\\.?ย\\.?|ต\\.?ค\\.?|พ\\.?ย\\.?|ธ\\.?ค\\.?';
+        
+        const datePatterns = [
+            // "24 ก.ค. 2569" หรือ "24 ก.ค. 69" (ปี 2 หรือ 4 หลัก)
+            new RegExp('(\\d{1,2})\\s*(' + thaiMonths + ')\\s*(\\d{2,4})'),
+            // "24/07/2569" หรือ "24-07-69"
+            /(\d{1,2})[/-](\d{1,2})[/-](\d{2,4})/,
+            // "2569/07/24" (ปี พ.ศ. นำหน้า)
+            /(\d{4})[/-](\d{1,2})[/-](\d{1,2})/
+        ];
+
+        for (let pattern of datePatterns) {
+            const match = cleanedText.match(pattern);
+            if (match) {
+                date = match[0].trim();
+                break;
+            }
         }
 
-        // 3. ค้นหาเวลา
+        // 3. ค้นหาเวลา (รองรับหลายรูปแบบ)
         let time = null;
-        const timeMatch = cleanedText.match(/(\d{2}:\d{2}(?::\d{2})?)/);
-        if (timeMatch) {
-            time = timeMatch[1];
+        const timePatterns = [
+            // "07:59 น." หรือ "16:55" หรือ "- 16:55"
+            /[-–]?\s*(\d{1,2}:\d{2})(?::\d{2})?\s*(?:น\.?)?/,
+            // "เวลา 07:59"
+            /(?:เวลา)\s*(\d{1,2}:\d{2})/
+        ];
+
+        for (let pattern of timePatterns) {
+            const match = cleanedText.match(pattern);
+            if (match) {
+                time = match[1].trim();
+                break;
+            }
         }
+
+        console.log('[OCR Debug] ผลลัพธ์ - จำนวนเงิน:', amount, '| วันที่:', date, '| เวลา:', time);
 
         // นำค่าที่สกัดได้ไปใส่ในช่อง Input อัตโนมัติ
         if (amount) {
@@ -238,7 +355,18 @@
             document.getElementById('date').value = `${date} ${time}`;
         } else if (date) {
             document.getElementById('date').value = date;
+        } else if (time) {
+            // ถ้าได้แค่เวลา ก็ใส่เวลาไว้ก่อน
+            document.getElementById('date').value = time;
         }
+
+        // แสดงข้อความ debug ให้ผู้ใช้เห็น (ช่วย troubleshoot)
+        const statusEl = document.getElementById('ocrStatus');
+        let statusMsg = 'อ่านสลิปสำเร็จ! ✅';
+        if (!date) statusMsg += ' (⚠️ ไม่พบวันที่ - กรุณากรอกเอง)';
+        if (!time) statusMsg += ' (⚠️ ไม่พบเวลา)';
+        if (!amount) statusMsg += ' (⚠️ ไม่พบจำนวนเงิน)';
+        statusEl.innerText = statusMsg;
     }
 
     function generateJson() {
@@ -372,6 +500,6 @@
         }
     }
 </script>
-
+<script src="cache-buster.js"></script>
 </body>
 </html>
